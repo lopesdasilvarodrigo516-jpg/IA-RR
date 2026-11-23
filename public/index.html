@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080b18"><title>IA RR — Sua inteligência</title>
+<style>
+:root{--bg:#070a14;--panel:#10162a;--line:#253254;--blue:#43c8ff;--purple:#a66bff;--txt:#edf3ff;--muted:#9ba9c8}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 20% 0%,#18244a 0,transparent 38%),radial-gradient(ellipse at 90% 20%,#25133f 0,transparent 34%),var(--bg);color:var(--txt);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh;display:flex;justify-content:center}
+.app{width:min(900px,100%);min-height:100vh;display:flex;flex-direction:column;padding:18px}
+header{display:flex;align-items:center;gap:13px;padding:10px 4px 18px;border-bottom:1px solid #26304b}
+.logo{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;font-weight:900;font-size:17px;background:linear-gradient(135deg,#37caff,#9361ff);color:#08101f;box-shadow:0 0 28px #4c8cff55}
+h1{font-size:19px;margin:0;letter-spacing:1.5px}header p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.status{margin-left:auto;border:1px solid #315b65;color:#8cebdc;border-radius:30px;padding:6px 10px;font-size:11px}
+main{flex:1;display:flex;flex-direction:column;padding:22px 0;gap:14px}
+.welcome{text-align:center;margin:auto auto 12px;max-width:560px}.orb{width:88px;height:88px;margin:0 auto 17px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#a6edff,#4a8cff 38%,#7b42d4 70%,#15172e);box-shadow:0 0 35px #477eff66,0 0 85px #8c4cff22;position:relative}.orb:after{content:"";position:absolute;inset:-8px;border:1px solid #7cbcff66;border-radius:50%;animation:pulse 3s infinite}@keyframes pulse{50%{transform:scale(1.1);opacity:.25}}
+.welcome h2{font-size:26px;margin:0 0 8px}.welcome p{color:var(--muted);line-height:1.6;margin:0}
+.suggestions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:19px}.suggestions button{background:#111a31;color:#cbd8f5;border:1px solid #293a61;border-radius:14px;padding:10px 12px}
+#chat{display:flex;flex-direction:column;gap:13px}.msg{max-width:86%;padding:13px 15px;border-radius:17px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.user{align-self:flex-end;background:linear-gradient(135deg,#235d9c,#5b3d9d);border-bottom-right-radius:5px}.assistant{align-self:flex-start;background:#111a2d;border:1px solid #273655;border-bottom-left-radius:5px}.typing{color:#9eadd0;font-style:italic}
+.composer{position:sticky;bottom:0;padding:12px 0 5px;background:linear-gradient(transparent,#070a14 20%)}form{display:flex;gap:9px;padding:8px;background:#11182b;border:1px solid #34436a;border-radius:19px;box-shadow:0 8px 35px #0007}textarea{flex:1;resize:none;border:0;outline:0;background:transparent;color:var(--txt);font:inherit;padding:9px;max-height:130px;min-height:42px}textarea::placeholder{color:#8190b2}#send{width:44px;height:44px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--purple));color:#08101b;font-size:20px;font-weight:900}#send:disabled{opacity:.45}
+.note{text-align:center;color:#7180a2;font-size:11px;margin:9px 0 0}.hidden{display:none!important}
+@media(max-width:520px){.app{padding:12px}.welcome h2{font-size:23px}.msg{max-width:93%}.status{font-size:10px}}
+</style>
+</head>
+<body><div class="app">
+<header><div class="logo">RR</div><div><h1>IA RR</h1><p>SUA INTELIGÊNCIA ARTIFICIAL</p></div><div class="status" id="status">● PRONTA PARA CONECTAR</div></header>
+<main><section class="welcome" id="welcome"><div class="orb"></div><h2>Olá! Eu sou a IA RR.</h2><p>Seu espaço para perguntar, aprender, criar e descobrir. Envie uma mensagem para começar.</p><div class="suggestions"><button type="button">Explique a fotossíntese</button><button type="button">Ajude com matemática</button><button type="button">Crie uma história</button></div></section><section id="chat" aria-live="polite"></section></main>
+<div class="composer"><form id="form"><textarea id="input" rows="1" placeholder="Pergunte alguma coisa à IA RR..." required></textarea><button id="send" aria-label="Enviar">➤</button></form><p class="note" id="note">A IA RR precisa ser conectada à API para gerar respostas reais.</p></div>
+</div>
+<script>
+const form=document.querySelector('#form'),input=document.querySelector('#input'),chat=document.querySelector('#chat'),welcome=document.querySelector('#welcome'),send=document.querySelector('#send'),statusEl=document.querySelector('#status'),note=document.querySelector('#note');
+let history=[];
+function add(role,text){const el=document.createElement('div');el.className='msg '+role;el.textContent=text;chat.append(el);el.scrollIntoView({behavior:'smooth',block:'end'});return el}
+document.querySelectorAll('.suggestions button').forEach(b=>b.addEventListener('click',()=>{input.value=b.textContent;input.focus()}));
+input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,130)+'px'});
+form.addEventListener('submit',async e=>{
+ e.preventDefault();const message=input.value.trim();if(!message)return;
+ welcome.classList.add('hidden');add('user',message);input.value='';input.style.height='auto';send.disabled=true;
+ const wait=add('assistant','Conectando à inteligência da IA RR…');wait.classList.add('typing');
+ try{
+  const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,history})});
+  const data=await res.json();if(!res.ok)throw new Error(data.error||'Não foi possível obter uma resposta.');
+  wait.classList.remove('typing');wait.textContent=data.reply;history.push({role:'user',content:message},{role:'assistant',content:data.reply});statusEl.textContent='● CONECTADA';statusEl.style.color='#8cebdc';note.textContent='As respostas são geradas pela inteligência conectada.';
+ }catch(err){wait.classList.remove('typing');wait.textContent='Ainda não consegui responder: '+err.message+'\\n\\nA interface está pronta, mas o servidor e a chave da API precisam ser configurados.';}
+ finally{send.disabled=false;input.focus()}
+});
+</script></body></html>
